@@ -1,12 +1,11 @@
 name: Test and Publish to Docker Hub
 
-
 on:
   push:
-    branches: [ main ]      # триггер при пуше в ветку main
-    tags: [ 'v*.*.*' ]   # триггер при добавлении тегов вида v1.0.0
+    branches: [ first-iteration ]  # триггер при пуше в вашу ветку
+    tags: [ 'v*.*.*' ]           # триггер при добавлении тегов вида v1.0.0
   pull_request:
-    branches: [ main ]      # триггер при PR в ветку main
+    branches: [ first-iteration ]  # триггер при PR в вашу ветку
 
 jobs:
   test-code:
@@ -29,7 +28,7 @@ jobs:
   publish-to-dockerhub:
     runs-on: ubuntu-latest
     needs: test-code
-    if: contains(github.ref, 'tags')
+    if: contains(github.ref, 'tags')  # выполняется только при наличии тега
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,5 +45,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/dranzz:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/dranzz:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/final-main:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/final-main:${{ github.ref_name }}
