@@ -1,0 +1,51 @@
+name: Test and Publish to Docker Hub
+
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  push:
+    tags: [ 'v*.*.*' ]  # срабатывает при добавлении тегов вида v1.0.0
+
+jobs:
+  test-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build binary
+        run: go build -o app .
+
+  publish-to-dockerhub:
+    runs-on: ubuntu-latest
+    needs: test-code  # выполняется только после успешного завершения test-code
+    if: contains(github.ref, 'tags')  # выполняется только при наличии тега
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/dranzz:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/dranzz:${{ github.ref_name }}
